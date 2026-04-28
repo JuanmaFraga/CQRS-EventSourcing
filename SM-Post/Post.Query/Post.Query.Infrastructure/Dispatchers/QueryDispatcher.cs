@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Post.Query.Infrastructure.Dispatchers
 {                                                         
-    internal class QueryDispatcher : IQueryDispatcher<PostEntity>       // Al implementar el patron Mediator, este es el Concrete Mediator, que implementa la interfaz IQueryDispatcher. Es responsable de registrar handlers para comandos específicos y enviar comandos para su procesamiento.
+    public class QueryDispatcher : IQueryDispatcher<PostEntity>       // Al implementar el patron Mediator, este es el Concrete Mediator, que implementa la interfaz IQueryDispatcher. Es responsable de registrar handlers para comandos específicos y enviar comandos para su procesamiento.
     {                                                                   // Nuestro tipo TEntity es PostEntity
         private readonly Dictionary<Type, Func<BaseQuery, Task<List<PostEntity>>>> _handlers = new();   // Para el retorno, siempre queremos que el Handler que se haga cargo, retorne una lista de elementos del tipo  PostEntity
 
-        public void RegisterHandler<TQuery>(Func<TQuery, Task<List<PostEntity>>> handler) where TQuery : BaseQuery
+        public void RegisterHandler<TQuery>(Func<TQuery, Task<List<PostEntity>>> handler) where TQuery : BaseQuery      // Lo llamamos en el Program.cs de la Api para registrar los Handlers al iniciar.
         {
             if(_handlers.ContainsKey(typeof(TQuery)))       // Si nuestro handler ya contiene el tipo especifico de Query Type
             {

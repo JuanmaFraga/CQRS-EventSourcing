@@ -1,9 +1,13 @@
 using Confluent.Kafka;
 using CQRS.Core.Consumers;
+using CQRS.Core.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Post.Query.Api.Queries;
+using Post.Query.Domain.Entities;
 using Post.Query.Domain.Repositories;
 using Post.Query.Infrastructure.Consumers;
 using Post.Query.Infrastructure.DataAccess;
+using Post.Query.Infrastructure.Dispatchers;
 using Post.Query.Infrastructure.Handlers;
 using Post.Query.Infrastructure.Repositories;
 
@@ -20,10 +24,23 @@ builder.Services.AddSingleton<DatabaseContextFactory>(new DatabaseContextFactory
 
 builder.Services.AddScoped<IPostRepository, PostRepository>();     // Agrega el servicio de repositorio de posts al contenedor de servicios con un tiempo de vida scoped, lo que significa que se creará una nueva instancia del repositorio para cada solicitud HTTP, y se compartirá dentro de esa solicitud, lo que es adecuado para manejar operaciones relacionadas con la base de datos en el contexto de una aplicación web.
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();     // Agrega el servicio de repositorio de comentarios al contenedor de servicios con un tiempo de vida scoped
+
+builder.Services.AddScoped<IQueryHandler, QueryHandler>();  // Registramos el QueryHandler inmediatamente después del registro de los repository porque depende del IPostRepository
+
 builder.Services.AddScoped<IEventHandler, Post.Query.Infrastructure.Handlers.EventHandler>();     // Hay un System.EventHandler en el espacio de nombres System, por lo que es necesario especificar el espacio de nombres completo para evitar ambigüedades.
 
 builder.Services.Configure<ConsumerConfig>(builder.Configuration.GetSection(nameof(ConsumerConfig)));     // Configura las opciones de ConsumerConfig utilizando la sección "Kafka:ConsumerConfig" del archivo de configuración de la aplicación, lo que permite que las opciones de configuración para el consumidor de Kafka se definan en el archivo de configuración y se inyecten en los servicios que las necesiten a través de la inyección de dependencias.
 builder.Services.AddScoped<IEventConsumer, EventConsumer>();     // Agrega el servicio de consumidor de eventos al contenedor de servicios con un tiempo de vida scoped, lo que significa que se creará una nueva instancia del consumidor para cada solicitud HTTP, y se compartirá dentro de esa solicitud, lo que es adecuado para manejar operaciones relacionadas con el consumo de eventos en el contexto de una aplicación web.
+
+// Registramos servicios del QueryHandler al iniciar la Api
+var queryHandler = builder.Services.BuildServiceProvider().GetRequiredService<IQueryHandler>();
+var dispatcher = new QueryDispatcher();                 
+dispatcher.RegisterHandler<FindAllPostsQuery>(queryHandler.HandleAsync);        // El delegate en este caso es HandleAsync del QueryHandler
+dispatcher.RegisterHandler<FindPostByIdQuery>(queryHandler.HandleAsync);
+dispatcher.RegisterHandler<FindPostsByAuthorQuery>(queryHandler.HandleAsync);
+dispatcher.RegisterHandler<FindAllPostsWithCommentsQuery>(queryHandler.HandleAsync);
+dispatcher.RegisterHandler<FindPostsWithLikesQuery>(queryHandler.HandleAsync);
+builder.Services.AddSingleton<IQueryDispatcher<PostEntity>>(_ => dispatcher);       // Cada vez que alguien pida un IQueryDispatcher<PostEntity>, usá siempre este dispatcher que ya tengo creado. Estamos inyectando la dependencia para la interfaz IQueryDispatcher<PostEntity>
 
 ///////////////////////////////////////////////////////////////////////////
 

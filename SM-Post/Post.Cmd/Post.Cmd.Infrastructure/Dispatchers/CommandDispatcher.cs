@@ -12,7 +12,7 @@ namespace Post.Cmd.Infrastructure.Dispatchers
                                                                                         // Este diccionario almacena los handlers registrados para cada tipo de comando, como funciones delegadas. La clave es el tipo del comando y el valor es una función que toma un comando y devuelve una tarea.
                                                                                         // el "_" antes del nombre de la variable es una convención común en C# para indicar que es un campo PRIVADO, sólo una convención.
                                                                                         //  Ejemplo de funcion delegada Func<int, int> duplicar = x => x * 2; Esta función delegada toma un entero y devuelve el resultado de multiplicarlo por 2. En este caso, el tipo de la función delegada es Func<int, int>, lo que significa que toma un entero como entrada y devuelve un entero como salida.
-        public void RegisterHandler<T>(Func<T, Task> handler) where T : BaseCommand
+        public void RegisterHandler<T>(Func<T, Task> handler) where T : BaseCommand         // Lo llamamos en el Program.cs de la Api para registrar los Handlers al iniciar.
         {
             if (_handlers.ContainsKey(typeof(T)))           // Si el handler ya está en nuestro diccionario de handlers
             {
