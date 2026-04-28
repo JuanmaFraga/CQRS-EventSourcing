@@ -35,7 +35,7 @@ namespace Post.Query.Infrastructure.Repositories
             }
         }
 
-        public async Task<PostEntity> g(Guid postId)
+        public async Task<PostEntity> GetByIdAsync(Guid postId)
         {
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
@@ -55,7 +55,7 @@ namespace Post.Query.Infrastructure.Repositories
             }
         }
 
-        public async Task<List<PostEntity>> ListByAuthor(string author)
+        public async Task<List<PostEntity>> ListByAuthorAsync(string author)
         {
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
