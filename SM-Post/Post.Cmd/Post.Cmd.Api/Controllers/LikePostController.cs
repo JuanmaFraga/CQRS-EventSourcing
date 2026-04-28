@@ -44,9 +44,8 @@ namespace Post.Cmd.Api.Controllers
             {
                 const string SAFE_ERROR_MESSAGE = "Error while processing request to Like a Post!";
                 _logger.Log(LogLevel.Error, ex, SAFE_ERROR_MESSAGE);
-                return StatusCode(StatusCodes.Status500InternalServerError, new NewPostResponse
+                return StatusCode(StatusCodes.Status500InternalServerError, new BaseResponse
                 {
-                    Id = id,
                     Message = SAFE_ERROR_MESSAGE
                 });
             }
