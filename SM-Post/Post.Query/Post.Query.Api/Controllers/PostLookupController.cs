@@ -21,35 +21,19 @@ namespace Post.Query.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllPostAsync() 
+        public async Task<ActionResult> GetAllPostAsync()
         {
             try
             {
                 var posts = await _queryDispatcher.SendAsync(new FindAllPostsQuery());      // Usamos el dispatcher va a despachar nuestro query object (FindAllPostQuery) al query handler que necesite,
                                                                                             // para que haga la consulta a través de la interfza IPostRepository
-                if (posts == null || !posts.Any())
-                {
-                    return NoContent();     // NoContent devuelve un error 204
-                }
-
-                var count = posts.Count();  // Vamos a usar la cantidad de post para la respuesta
-                
-                return Ok(new PostLookupResponse
-                {
-                    Posts = posts,
-                    Message = $"Succesfully returned {count} post{(count > 1 ? 's' : string.Empty)}!"       // Sin los () falla porque el : termina la interpolation (uso de variables dentro de {} en una string)
-                });
+                return NormalResponse(posts);
             }
             catch (Exception ex)
             {
                 const string SAFE_ERROR_MESSAGE = "Error while procesing request to retrieve all posts!";
 
-                _logger.LogError(ex, SAFE_ERROR_MESSAGE);
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new BaseResponse 
-                { 
-                    Message = SAFE_ERROR_MESSAGE 
-                });
+                return ErrorResponse(ex, SAFE_ERROR_MESSAGE);
             }
         }
 
@@ -65,8 +49,6 @@ namespace Post.Query.Api.Controllers
                     return NoContent();     // NoContent devuelve un error 204
                 }
 
-                var count = posts.Count();  // Vamos a usar la cantidad de post para la respuesta
-
                 return Ok(new PostLookupResponse
                 {
                     Posts = posts,
@@ -77,13 +59,84 @@ namespace Post.Query.Api.Controllers
             {
                 const string SAFE_ERROR_MESSAGE = "Error while procesing request to find a post by Id!";
 
-                _logger.LogError(ex, SAFE_ERROR_MESSAGE);
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new BaseResponse
-                {
-                    Message = SAFE_ERROR_MESSAGE
-                });
+                return ErrorResponse(ex, SAFE_ERROR_MESSAGE);
             }
+        }
+
+        [HttpGet("byAuthor/{author}")]
+        public async Task<ActionResult> GetByAuthorAsync(string author)
+        {
+            try
+            {
+                var posts = await _queryDispatcher.SendAsync(new FindPostsByAuthorQuery { Author = author });
+
+                return NormalResponse(posts);
+            }
+            catch (Exception ex)
+            {
+                const string SAFE_ERROR_MESSAGE = "Error while procesing request to find posts by Author!";
+
+                return ErrorResponse(ex, SAFE_ERROR_MESSAGE);
+            }
+        }
+
+        [HttpGet("withLikes/{likes}")]
+        public async Task<ActionResult> GetWithLikesAsync(int numberOfLikes)
+        {
+            try
+            {
+                var posts = await _queryDispatcher.SendAsync(new FindPostsWithLikesQuery { NumberOfLikes = numberOfLikes });
+
+                return NormalResponse(posts);
+            }
+            catch (Exception ex)
+            {
+                const string SAFE_ERROR_MESSAGE = "Error while procesing request to find posts with Likes!";
+
+                return ErrorResponse(ex, SAFE_ERROR_MESSAGE);
+            }
+        }
+
+        [HttpGet("withComments")]
+        public async Task<ActionResult> GetWithCommentsAsync()
+        {
+            try
+            {
+                var posts = await _queryDispatcher.SendAsync(new FindAllPostsWithCommentsQuery());
+                return NormalResponse(posts);
+            }
+            catch (Exception ex)
+            {
+                const string SAFE_ERROR_MESSAGE = "Error while procesing request to find posts with Comments!";
+
+                return ErrorResponse(ex, SAFE_ERROR_MESSAGE);
+            }
+        }
+
+        private ActionResult NormalResponse(List<PostEntity> posts)     // Para no repetir código entre los controller
+        {                                                               // Puede devolver Ok 200 o NoContent 204
+            if (posts == null || !posts.Any())
+            {
+                return NoContent();     // NoContent devuelve un error status 204
+            }
+
+            var count = posts.Count();  // Vamos a usar la cantidad de post para la respuesta
+
+            return Ok(new PostLookupResponse
+            {
+                Posts = posts,
+                Message = $"Succesfully returned {count} post{(count > 1 ? 's' : string.Empty)}!"       // Sin los () falla porque el : termina la interpolation (uso de variables dentro de {} en una string)
+            });
+        }
+
+        private ActionResult ErrorResponse(Exception ex, string SAFE_ERROR_MESSAGE)     // Para no repetir código entre los controller
+        {                                                                               // Responde Error 500
+            _logger.LogError(ex, SAFE_ERROR_MESSAGE);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, new BaseResponse
+            {
+                Message = SAFE_ERROR_MESSAGE
+            });
         }
     }
 }
