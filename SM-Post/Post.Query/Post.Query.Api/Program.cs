@@ -55,6 +55,9 @@ builder.Services.AddHostedService<ConsumerHostedService>();     // Agrega el ser
 
 builder.Services.AddOpenApi();
 
+// Inicializamos los Controllers
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -84,6 +87,8 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
+// Mapeamos los Controllers
+app.MapControllers();
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)

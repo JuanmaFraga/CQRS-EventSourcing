@@ -5,9 +5,9 @@ using Post.Query.Api.DTOs;
 using Post.Query.Api.Queries;
 using Post.Query.Domain.Entities;
 
-namespace Post.Query.Api.Controllers
+namespace Post.Query.Api.Controllers                    // http://localhost:5011
 {
-    [ApiController]
+    [ApiController]                                     
     [Route("api/v1/[controller]")]
     public class PostLookupController : ControllerBase          // Agregamos todos los métodos GET para las Querys en este único controllador
     {
@@ -63,7 +63,7 @@ namespace Post.Query.Api.Controllers
             }
         }
 
-        [HttpGet("byAuthor/{author}")]
+        [HttpGet("byAuthor/{author}")]      // En el query del PostRepository usamos x.Author.Contains(author) así que podemos pasar parte del nombre solamente
         public async Task<ActionResult> GetByAuthorAsync(string author)
         {
             try
@@ -80,7 +80,7 @@ namespace Post.Query.Api.Controllers
             }
         }
 
-        [HttpGet("withLikes/{likes}")]
+        [HttpGet("withLikes/{numberOfLikes}")]
         public async Task<ActionResult> GetWithLikesAsync(int numberOfLikes)
         {
             try
@@ -113,7 +113,8 @@ namespace Post.Query.Api.Controllers
             }
         }
 
-        private ActionResult NormalResponse(List<PostEntity> posts)     // Para no repetir código entre los controller
+        // Métodos privados
+        private ActionResult NormalResponse(List<PostEntity> posts)     // Para no repetir código entre los controller y cumplir con el principio DRY (Don’t Repeat Yourself)
         {                                                               // Puede devolver Ok 200 o NoContent 204
             if (posts == null || !posts.Any())
             {
@@ -129,7 +130,7 @@ namespace Post.Query.Api.Controllers
             });
         }
 
-        private ActionResult ErrorResponse(Exception ex, string SAFE_ERROR_MESSAGE)     // Para no repetir código entre los controller
+        private ActionResult ErrorResponse(Exception ex, string SAFE_ERROR_MESSAGE)     // Para no repetir código entre los controller y cumplir con el principio DRY (Don’t Repeat Yourself)
         {                                                                               // Responde Error 500
             _logger.LogError(ex, SAFE_ERROR_MESSAGE);
 

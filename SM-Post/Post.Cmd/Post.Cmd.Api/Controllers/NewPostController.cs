@@ -5,7 +5,7 @@ using Post.Cmd.Api.DTOs;
 using Post.Common.DTOs;
 using System.Data;
 
-namespace Post.Cmd.Api.Controllers
+namespace Post.Cmd.Api.Controllers                      // http://localhost:5010
 {
     [ApiController]     // Marca el controller como Restfull controller
     [Route("api/v1/[controller]")]      // "[controller]" va a ser reemplazado con "NewPost", o sea "api/v1/NewPost"

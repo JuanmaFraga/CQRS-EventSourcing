@@ -5,7 +5,7 @@ using Post.Cmd.Api.Commands;
 using Post.Cmd.Api.DTOs;
 using Post.Common.DTOs;
 
-namespace Post.Cmd.Api.Controllers
+namespace Post.Cmd.Api.Controllers                                  // http://localhost:5010
 {
     [ApiController]     // Marca el controller como Restfull controller
     [Route("api/v1/[controller]")]  // [controller] será reemplazado por likePost (minuscula)

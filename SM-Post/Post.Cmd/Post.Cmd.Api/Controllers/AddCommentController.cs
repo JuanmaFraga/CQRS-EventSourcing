@@ -5,7 +5,7 @@ using Post.Cmd.Api.Commands;
 using Post.Common.DTOs;
 using System.Collections.Immutable;
 
-namespace Post.Cmd.Api.Controllers
+namespace Post.Cmd.Api.Controllers                                  // http://localhost:5010
 {
     [ApiController]
     [Route("api/v1/[controller]")]

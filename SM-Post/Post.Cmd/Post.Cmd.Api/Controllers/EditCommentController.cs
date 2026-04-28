@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Post.Cmd.Api.Commands;
 using Post.Common.DTOs;
 
-namespace Post.Cmd.Api.Controllers
+namespace Post.Cmd.Api.Controllers                                  // http://localhost:5010
 {
     [ApiController]
     [Route("api/v1/[controller]")]

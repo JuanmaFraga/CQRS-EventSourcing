@@ -41,15 +41,12 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 CommentEntity comment = await GetByIdAsync(commentId);
-                if (comment != null)
-                {
-                    context.Comments.Remove(comment);
-                    _ = await context.SaveChangesAsync();
-                }
-                else
-                {
+                if (comment == null)
                     return;
-                }
+
+                context.Comments.Remove(comment);
+                _ = await context.SaveChangesAsync();
+
             }
         }
 

@@ -61,7 +61,7 @@ namespace Post.Query.Infrastructure.Repositories
             {
                 return await context.Posts.AsNoTracking()
                     .Include(p => p.Comments)                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
-                    .Where(x => x.Author.Contains(author))
+                    .Where(x => x.Author.Contains(author))      // Usamos contains o sea que podemos pasar parte del nombre del autor
                     .ToListAsync();
             }
         }
