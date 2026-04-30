@@ -17,7 +17,21 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 ////////////////////// ZONA PARA AGREGAR SERVICIOS DE LA APLICACION //////////////////////
-Action<DbContextOptionsBuilder> configureDbContext = o => o.UseLazyLoadingProxies().UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));     //UseLazyLoadingProxies() habilita la carga diferida de las entidades relacionadas, lo que significa que las entidades relacionadas se cargarán automáticamente cuando se acceda a ellas por primera vez.
+
+// Manejo la seleccion de appsettings para los distintos ambientes //
+Action<DbContextOptionsBuilder> configureDbContext;
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");     // del launchSettings.json en la carpeta Properties de la api
+
+if (env.Equals("Development.PostgreSQL"))
+{
+    // Cargo config PostgreSQL
+    configureDbContext = o => o.UseLazyLoadingProxies().UseNpgsql(builder.Configuration.GetConnectionString("SqlServer"));     //UseLazyLoadingProxies() habilita la carga diferida de las entidades relacionadas, lo que significa que las entidades relacionadas se cargarán automáticamente cuando se acceda a ellas por primera vez.
+}
+else //if (env.Equals("Development"))
+{
+    // Cargo config SqlServer
+    configureDbContext = o => o.UseLazyLoadingProxies().UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));     //UseLazyLoadingProxies() habilita la carga diferida de las entidades relacionadas, lo que significa que las entidades relacionadas se cargarán automáticamente cuando se acceda a ellas por primera vez.
+}
 
 builder.Services.AddDbContext<DatabaseContext>(configureDbContext);
 builder.Services.AddSingleton<DatabaseContextFactory>(new DatabaseContextFactory(configureDbContext));     // Agrega el DatabaseContextFactory como un servicio singleton en el contenedor de servicios de la aplicación, lo que permite que una única instancia del factory se comparta a lo largo de toda la aplicación para crear instancias de DatabaseContext según sea necesario, por la utilización de Factory.
@@ -40,7 +54,7 @@ builder.Services.AddScoped<IEventConsumer, EventConsumer>();     // Agrega el se
 
 // Registramos servicios del QueryHandler al iniciar la Api
 var queryHandler = builder.Services.BuildServiceProvider().GetRequiredService<IQueryHandler>();
-var dispatcher = new QueryDispatcher();                 
+var dispatcher = new QueryDispatcher();
 dispatcher.RegisterHandler<FindAllPostsQuery>(queryHandler.HandleAsync);        // El delegate en este caso es HandleAsync del QueryHandler
 dispatcher.RegisterHandler<FindPostByIdQuery>(queryHandler.HandleAsync);
 dispatcher.RegisterHandler<FindPostsByAuthorQuery>(queryHandler.HandleAsync);
@@ -75,7 +89,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),

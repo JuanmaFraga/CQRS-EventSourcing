@@ -5,9 +5,10 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:5011", //equivale a env: "ASPNETCORE_URLS": "http://localhost:5011", 
+      "applicationUrl": "http://localhost:5011", //equivale a env: "ASPNETCORE_URLS": "http://localhost:5011",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "Development", //"Development" para que tome el appsettings.development.json
+        //"ASPNETCORE_ENVIRONMENT": "Development.PostgreSQ", //"Development.PostgreSQL" para que tome el appsettings.development.PostgreSQL.json
         "KAFKA_TOPIC": "SocialMediaPostEvents"
       }
     }

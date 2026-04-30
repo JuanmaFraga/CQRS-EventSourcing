@@ -1,0 +1,55 @@
+🔹 0. Instalar Git para Windows
+
+🔹 1. Inicializar el repositorio en la carpeta más exterior de tu proyecto 
+En la carpeta de tu proyecto:
+git init
+
+- 1.1 Crear el archivo de texto .gitignore (así sin nada antes del punto) con el contenido
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+- 1.2 Git necesita saber quién está haciendo los commits (nombre y email).
+git config --global user.name "Juan Manuel Fraga"
+git config --global user.email "tu-email@example.com"
+
+🔹 2. Agregar archivos al seguimiento
+git add .
+
+🔹 3. Hacer el primer commit
+git commit -m "Primer commit"
+
+🔹 4. Crear repositorio en GitHub
+Entrá a GitHub
+Click en "New repository"
+Elegí nombre, visibilidad, etc.
+No marques "Initialize with README" (para evitar conflictos)
+
+🔹 5. Conectar tu repo local con GitHub
+Copiá la URL del repo (HTTPS o SSH) y ejecutá:
+git remote add origin https://github.com/tu-usuario/tu-repo.git
+
+🔹 6. Subir el código
+git branch -M main
+git push -u origin main
+
+🔹 ✔️ Listo
+
+----------------------------------
+
+🔹 Flujo normal de trabajo
+
+Cada vez que hagas cambios en tu proyecto:
+
+git add .
+git commit -m "Descripción del cambio"
+git push
+
+👉 Eso es todo.
+Git detecta los cambios en tu carpeta local y los sube.
+
+Tu proyecto ya debería estar en GitHub 🚀
+
+Nota: para borrar las cosas despues del "git add ." se puede hacer "git rm -r --cached ."

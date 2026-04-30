@@ -1,0 +1,18 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "SqlServer": "Server=localhost,1433;Database=SocialMedia;User Id=SMUser;Password=SmPa$$w06500;TrustServerCertificate=True;Encrypt=False" // Agrego TrustServerCertificate=True;Encrypt=False para que no de error de cetrificado
+  },
+  "ConsumerConfig": {
+    "GroupId": "SM_Consumer",
+    "BootstrapServers": "localhost:9092",
+    "EnableAutoCommit": false,
+    "AutoOffsetReset": "Earliest",
+    "AutoCreateTopics": true
+  }
+}

@@ -1,0 +1,43 @@
+- Docker - Docker-Compose
+	- La imagen que usa para el zookeeper y Kafka de bitnami fue movida a bitnamilegacy, por eso en el campo "image" de ambos cambiarlo por bitnamilegacy
+	- Si no funciona, buscar el docker-compose que está actualmente que tiene los 3 servicios (zookeeper, SQL, Kafka) y hacer "docker-compose down -v" para bajarlos y de nuevo "docker-compose up -d" para subirlos de nuevo
+- Controllers 
+	- Una vez creados, ir al Program.cs de la Post.Cmd.Api y agregar estas líneas:
+		- "builder.Services.AddControllers();" -> debajo de la línea "builder.Services.AddOpenApi();"
+		- "app.MapControllers();" -> arriba de "app.Run();"
+		
+- Primera ejecución 
+	- Si da error en el topic la primera vez en el var consumeResult = consumer.Consume(); del Consume() del query. Correr el lado del Cmd y hacer un NewPost con postman para que se genere el topic al enviarse por primera vez.
+	POST: http://localhost:5010/api/v1/newPost
+	Body: {
+    "author": "John Doe",
+    "message": "#CQRS and #EventSourcing are amazing #Microservices desing patterns!"
+	}	
+	
+- Si se pisan los likes al hacer un rebuild y terminan todos con 1 like los que tienen likes
+	- Esto pasa porque en el LikePostEvent del EventHandler del las query, entre que hacemos getbyidasync para traer de la base, modificamos y hacemos el update en el repo, se puede lanzar otro hilo y traer el post antes de que se guarde, trayendo otra vez con 0 likes.
+		Entonces para esto usamos directamente una operación de entity frameworks que se llama ExecuteUpdateAsync y sacamos la lógica del handler del like quedando:
+		- EventHandler.cs : 
+		public async Task On(PostLikedEvent @event)
+        {
+			await _postRepository.LikePostAsync(@event.Id);     // Pasamos la lógica del like a una operación de repo en particular que trae y suma en un sólo paso de db para evitar race conditions entre get y update para varios like seguidos
+        }
+		- PosRepository.cs : Agregamos la operación ( y en IPostRepository la interfaz) :
+		public async Task LikePostAsync(Guid postId)
+        {
+            using (DatabaseContext context = _contextFactory.CreateDbContext())
+            {
+                _ = await context.Posts
+                    .Where(x => x.PostId == postId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(b => b.Likes, b => b.Likes + 1));
+            }
+        }
+		
+	
+ - Deployear PostgreSQL en docker
+	- En terminal correr: (con postgres:lates al final falla)
+		docker run -d --name postgres-container -p 5432:5432 --network mydockernetwork -e POSTGRES_PASSWORD=postgresPsw --restart always -v postgresql_data:/var/lib/postgresql/data postgres:15
+	- Para conectar con PgAdmin 4:
+	Servers -> Register -> Name: postgres:local; host: localhost; port 5432; user: postgres; pass: postgresPsw
+	
+	
