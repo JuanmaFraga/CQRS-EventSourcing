@@ -24,8 +24,8 @@ namespace Post.Query.Infrastructure.Handlers
             {
                 PostId = @event.Id,
                 Author = @event.Author,
-                Message = @event.Message,
-                DatePosted = @event.DatePosted
+                DatePosted = @event.DatePosted,
+                Message = @event.Message
             };
 
             await _postRepository.CreateAsync(post);
@@ -44,22 +44,15 @@ namespace Post.Query.Infrastructure.Handlers
 
         public async Task On(PostLikedEvent @event)
         {
-            var post = await _postRepository.GetByIdAsync(@event.Id);
+            //var post = await _postRepository.GetByIdAsync(@event.Id);
 
-            if (post == null) return; // Si el post no existe, no hacemos nada
+            //if (post == null) return; // Si el post no existe, no hacemos nada
 
-            post.Likes++;
+            //post.Likes++;
 
-            await _postRepository.UpdateAsync(post);
-        }
+            //await _postRepository.UpdateAsync(post);
 
-        public async Task On(PostRemovedEvent @event)
-        {
-            var post = await _postRepository.GetByIdAsync(@event.Id);               // Traemos el Post CON COMENTARIOS para que al hacer el DELETE, Entity Frameworks borre los comentarios también.
-                                                                                    // Con Navigation Properties, si definimos el schema de las entidades, automáticamente se crea una restricción de clave foránea en cascada para Delete
-            if (post == null) return; // Si el post no existe, no hacemos nada
-
-            await _postRepository.DeleteAsync(post);        // Borramos el Post CON los comentarios (porque los trajimos en el GetByIdAsync (con incluide))
+            await _postRepository.LikePostAsync(@event.Id);     // Pasamos la lógica del like a una operación de repo en particular que trae y suma en un sólo paso de db para evitar race conditions entre get y update para varios like seguidos
         }
 
         public async Task On(CommentAddedEvent @event)
@@ -68,9 +61,10 @@ namespace Post.Query.Infrastructure.Handlers
             {
                 PostId = @event.Id,             // Asumimos que el Id del evento es el Id del post al que se le añade el comentario
                 CommentId = @event.CommentId,
-                Username = @event.Username,
+                CommentDate = @event.CommentDate,
                 Comment = @event.Comment,
-                CommentDate = @event.CommentDate
+                Username = @event.Username,
+                Edited = false      // Porque es un comentario nuevo
             };
 
             await _commentRepository.CreateAsync(comment);
@@ -92,6 +86,11 @@ namespace Post.Query.Infrastructure.Handlers
         public async Task On(CommentRemovedEvent @event)
         {
             await _commentRepository.DeleteAsync(@event.CommentId);     // Si el comentario no existe, el repositorio se encargará de manejarlo (puede lanzar una excepción o simplemente no hacer nada)
+        }
+
+        public async Task On(PostRemovedEvent @event)
+        {
+            await _postRepository.DeleteAsync(@event.Id);        // Borramos el Post CON los comentarios (porque los trajimos en el GetByIdAsync (con incluide))
         }
     }
 }

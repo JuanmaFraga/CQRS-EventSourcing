@@ -4,8 +4,8 @@ using System.ComponentModel.Design;
 
 namespace Post.Query.Domain.Entities
 {
-    [Table("Comment")]
-    public class CommentEntity
+    [Table("Comment",Schema ="dbo")]            // Especificamos el NOMBRE de la tabla y el Schema
+    public class CommentEntity                  // Si no, al tener "dataContext.Database.EnsureCreated();" en el Program de la api, nos crearía las entidades con el schema del User que tenemos en el connection string (Quedarían como SMUser.Posts las tablas)
     {
         [Key]
         public Guid CommentId { get; set; }

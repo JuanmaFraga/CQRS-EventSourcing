@@ -6,8 +6,8 @@ using System.Text;
 
 namespace Post.Query.Domain.Entities
 {
-    [Table("Post")]                         // Linkeamos la entidad con la tabla Post
-    public class PostEntity
+    [Table("Post", Schema = "dbo")]            // Linkeamos la entidad con la tabla Post y le especificamos el Schema
+    public class PostEntity                     // Si no, al tener "dataContext.Database.EnsureCreated();" en el Program de la api, nos crearía las entidades con el schema del User que tenemos en el connection string (Quedarían como SMUser.Posts las tablas)
     {
         [Key]
         public Guid PostId { get; set; }

@@ -7,12 +7,12 @@ namespace CQRS.Core.Domain
 {
     public abstract class AggregateRoot                 // Una clase abtracta no puede instanciarse directamente si no que sirve como base para otras clases. No se puede hacer un new AggregateRoot() porque es abstracta, pero se puede hacer un new PostAggregate() que herede de AggregateRoot.
     {                                                   // Encargado de mantener la consistencia, es decir, elevar eventos del aggregate, aplicar cambios de estado del aggregate, gestionar los cambios no aplicados, poder hacer un replay del último estado del aggregate y determinar qué métodos invocar, etc.
-        protected Guid _Id;
+        protected Guid _id;
         private readonly List<BaseEvent> _changes = new List<BaseEvent>();      // Los Eventos se usan para registrar cambios de estados en el Aggregate.
 
         public Guid Id                                  // Al escribirse así con el _Id como campo privado y el Id como propiedad pública de solo lectura, se garantiza que el Id solo se pueda asignar dentro de la clase o en las clases que hereden de AggregateRoot, pero no desde fuera de la clase. Esto es importante para mantener la integridad del Id, ya que el Id es un identificador único que no debe cambiar una vez asignado.
         {
-            get { return _Id; }                         // Alternativamente se podría escribir como public Guid Id { get; protected set; } y eliminar el campo _Id, pero se ha optado por esta forma para tener un control más explícito sobre la asignación del Id.
+            get { return _id; }                         // Alternativamente se podría escribir como public Guid Id { get; protected set; } y eliminar el campo _Id, pero se ha optado por esta forma para tener un control más explícito sobre la asignación del Id.
         }
 
         public int Version { get; set; } = -1;          // Control de la versión del Aggregate, es decir, cuántos eventos se han aplicado al Aggregate. Se inicializa en -1 porque cuando se crea un nuevo Aggregate no se ha aplicado ningún evento, por lo que la versión es -1. Cuando se aplica el primer evento, la versión pasa a ser 0, luego 1, y así sucesivamente.
@@ -38,12 +38,11 @@ namespace CQRS.Core.Domain
 
             if (method == null)
             {
-                throw new ArgumentException(nameof(method), $"The Apply method not found in the Aggregate for {@event.GetType().Name}!");
+                throw new ArgumentNullException(nameof(method), $"The Apply method not found in the Aggregate for {@event.GetType().Name}!");
             }
-            else
-            {
-                method.Invoke(this, new object[] { @event });     // Invoke(..) ejecuta el método encontrado en la línea anterior, pasando el evento como argumento. Esto permite que se ejecute la lógica de negocio correspondiente al evento y se actualice el estado del Aggregate en consecuencia.
-            }
+
+
+            method.Invoke(this, new object[] { @event });     // Invoke(..) ejecuta el método encontrado en la línea anterior, pasando el evento como argumento. Esto permite que se ejecute la lógica de negocio correspondiente al evento y se actualice el estado del Aggregate en consecuencia.
 
             if (isNew)
             {

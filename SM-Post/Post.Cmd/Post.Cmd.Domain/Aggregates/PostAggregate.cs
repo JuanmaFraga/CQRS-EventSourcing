@@ -37,51 +37,51 @@ namespace Post.Cmd.Domain.Aggregates
 
         public void Apply(PostCreatedEvent @event)     // Método Apply para manejar el evento PostCreatedEvent
         {                                              // Es el método "Apply" que busca el GetMethod de ApplyChanges de AggregateRoot
-            _Id = @event.Id;
-            _author = @event.Author;
+            _id = @event.Id;
             _active = true;                // Se asume que un post recién creado está activo por defecto.
+            _author = @event.Author;
         }
 
         public void EditMessage(string message)     // Método público para editar el mensaje del post. Este método se puede llamar desde fuera de la clase para actualizar el contenido del post, y registra un nuevo evento de tipo PostEditedEvent que contiene la nueva información del mensaje.
         {
             if (!_active)
             {
-                throw new InvalidOperationException("Cannot edit the message of an inactive post!");
+                throw new InvalidOperationException("You cannot edit the message of an inactive post!");
             }
 
             if (string.IsNullOrWhiteSpace(message))
             {
-                throw new InvalidOperationException($"The value of {nameof(message)} cannot be null or empty! Please provide a valid {nameof(message)}");
+                throw new InvalidOperationException($"The value of {nameof(message)} cannot be null or empty. Please provide a valid {nameof(message)}!");
             }                                                       // Usamos el operador nameof por si llegamos a cambiar el nombre del parametro message por algo como "post message"
 
             RaiseEvent(new MessageUpdatedEvent
             {
-                Id = _Id,
+                Id = _id,
                 Message = message
             });
         }
 
         public void Apply(MessageUpdatedEvent @event)     // Método Apply para manejar el evento MessageUpdatedEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
         }
 
-        public void LikedPost()                         // No necesitamos el id del post porque el Aggregate ya tiene su propio Id que se asigna al crearse el post
+        public void LikePost()                         // No necesitamos el id del post porque el Aggregate ya tiene su propio Id que se asigna al crearse el post
         {
             if (!_active)
             {
                 throw new InvalidOperationException("You cannot like an inactive post!");
             }
 
-            RaiseEvent(new PostLikedEvent 
-            { 
-                Id = _Id 
+            RaiseEvent(new PostLikedEvent
+            {
+                Id = _id
             });
         }
 
         public void Apply(PostLikedEvent @event)     // Método Apply para manejar el evento PostLikedEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
         }
 
         public void AddComment(string comment, string username)     // Método público para agregar un comentario al post. Este método registra un nuevo evento de tipo CommentAddedEvent que contiene la información del comentario y el autor del mismo.
@@ -93,17 +93,12 @@ namespace Post.Cmd.Domain.Aggregates
 
             if (string.IsNullOrWhiteSpace(comment))
             {
-                throw new InvalidOperationException($"The value of {nameof(comment)} cannot be null or empty! Please provide a valid {nameof(comment)}");
-            }
-
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                throw new InvalidOperationException($"The value of {nameof(username)} cannot be null or empty! Please provide a valid {nameof(username)}");
+                throw new InvalidOperationException($"The value of {nameof(comment)} cannot be null or empty. Please provide a valid {nameof(comment)}!");
             }
 
             RaiseEvent(new CommentAddedEvent
             {
-                Id = _Id,
+                Id = _id,
                 CommentId = Guid.NewGuid(),
                 Comment = comment,
                 Username = username,
@@ -113,7 +108,7 @@ namespace Post.Cmd.Domain.Aggregates
 
         public void Apply(CommentAddedEvent @event)     // Método Apply para manejar el evento CommentAddedEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
             _comments.Add(@event.CommentId, new Tuple<string, string>(@event.Comment, @event.Username));
         }
 
@@ -126,12 +121,12 @@ namespace Post.Cmd.Domain.Aggregates
 
             if (!_comments[commentId].Item2.Equals(username, StringComparison.CurrentCultureIgnoreCase))        // Verificamos que el usuario que intenta editar el comentario sea el mismo que lo creó, comparando el nombre de usuario almacenado en el diccionario de comentarios con el nombre de usuario proporcionado como parámetro.
             {                                                                                                   //Los comentarios tienen un Id único (Guid), el contenido del comentario (string) y el nombre de usuario del autor del comentario (string).
-                throw new InvalidOperationException("You are not allowed to edit a comment that is made by another user!");
+                throw new InvalidOperationException("You are not allowed to edit a comment that was made by another user!");
             }
 
             RaiseEvent(new CommentUpdatedEvent
             {
-                Id = _Id,
+                Id = _id,
                 CommentId = commentId,
                 Comment = comment,
                 Username = username,
@@ -141,7 +136,7 @@ namespace Post.Cmd.Domain.Aggregates
 
         public void Apply(CommentUpdatedEvent @event)     // Método Apply para manejar el evento CommentUpdatedEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
             _comments[@event.CommentId] = new Tuple<string, string>(@event.Comment, @event.Username);
         }
 
@@ -154,19 +149,19 @@ namespace Post.Cmd.Domain.Aggregates
 
             if (!_comments[commentId].Item2.Equals(username, StringComparison.CurrentCultureIgnoreCase))
             {
-                throw new InvalidOperationException("You are not allowed to remove a comment that is made by another user!");
+                throw new InvalidOperationException("You are not allowed to remove a comment that was made by another user!");
             }
 
             RaiseEvent(new CommentRemovedEvent
             {
-                Id = _Id,
-                CommentId = commentId,
+                Id = _id,
+                CommentId = commentId
             });
         }
 
         public void Apply(CommentRemovedEvent @event)     // Método Apply para manejar el evento RemovedCommentEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
             _comments.Remove(@event.CommentId);
         }
 
@@ -179,18 +174,18 @@ namespace Post.Cmd.Domain.Aggregates
 
             if (!_author.Equals(username, StringComparison.CurrentCultureIgnoreCase))
             {
-                throw new InvalidOperationException("You are not allowed to delete a post that is made by another user!");
+                throw new InvalidOperationException("You are not allowed to delete a post that was made by another user!");
             }
 
             RaiseEvent(new PostRemovedEvent
             {
-                Id = _Id
+                Id = _id
             });
         }
 
         public void Apply(PostRemovedEvent @event)     // Método Apply para manejar el evento PostRemovedEvent
         {
-            _Id = @event.Id;
+            _id = @event.Id;
             _active = false;                // Al eliminar un post, simplemente lo marcamos como inactivo en lugar de eliminarlo físicamente de la base de datos, lo que nos permite mantener un historial completo de eventos relacionados con ese post.
         }
     }

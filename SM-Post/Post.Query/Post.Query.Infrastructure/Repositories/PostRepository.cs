@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 using Post.Query.Domain.Entities;
 using Post.Query.Domain.Repositories;
 using Post.Query.Infrastructure.DataAccess;
@@ -26,12 +27,38 @@ namespace Post.Query.Infrastructure.Repositories
             }
         }
 
-        public async Task DeleteAsync(PostEntity post)
+        public async Task DeleteAsync(Guid postId)
         {
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
+                var post = await GetByIdAsync(postId);
+
+                if (post == null)
+                    return;
+
                 context.Posts.Remove(post);
                 _ = await context.SaveChangesAsync();
+            }
+        }
+
+        public async Task LikePostAsync(Guid postId)            // Pasamos la lógica del like a una operación de repo en particular que trae y suma en un sólo paso de db para evitar race conditions entre get y update para varios like seguidos
+        {
+            using (DatabaseContext context = _contextFactory.CreateDbContext())
+            {
+                _ = await context.Posts
+                    .Where(x => x.PostId == postId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(b => b.Likes, b => b.Likes + 1));
+            }
+        }
+
+        public async Task<List<PostEntity>> ListByAuthorAsync(string author)
+        {
+            using (DatabaseContext context = _contextFactory.CreateDbContext())
+            {
+                return await context.Posts.AsNoTracking()
+                    .Include(i => i.Comments).AsNoTracking()                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
+                    .Where(x => x.Author.Contains(author))      // Usamos contains o sea que podemos pasar parte del nombre del autor
+                    .ToListAsync();
             }
         }
 
@@ -40,7 +67,7 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 return await context.Posts
-                    .Include(p => p.Comments)                   // Incluimos los COMENTARIOS del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
+                    .Include(i => i.Comments)                   // Incluimos los COMENTARIOS del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
                     .FirstOrDefaultAsync(x => x.PostId == postId);      // Necesitamos incluirlos para que al hacer el DELETE, Entity Frameworks haga el DELETE del Comentario también
             }
         }
@@ -50,18 +77,7 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 return await context.Posts.AsNoTracking()       // AsNoTracking() se utiliza para mejorar el rendimiento al indicar a Entity Framework que no realice un seguimiento de los cambios en las entidades recuperadas, lo que es útil cuando solo se necesitan leer datos sin modificarlos.
-                    .Include(p => p.Comments)                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
-                    .ToListAsync();
-            }
-        }
-
-        public async Task<List<PostEntity>> ListByAuthorAsync(string author)
-        {
-            using (DatabaseContext context = _contextFactory.CreateDbContext())
-            {
-                return await context.Posts.AsNoTracking()
-                    .Include(p => p.Comments)                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
-                    .Where(x => x.Author.Contains(author))      // Usamos contains o sea que podemos pasar parte del nombre del autor
+                    .Include(i => i.Comments).AsNoTracking()                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
                     .ToListAsync();
             }
         }
@@ -71,7 +87,7 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 return await context.Posts.AsNoTracking()
-                    .Include(p => p.Comments)                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
+                    .Include(i => i.Comments).AsNoTracking()                // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
                     .Where(x => x.Comments != null && x.Comments.Any())                    // Filtramos los posts para incluir solo aquellos que tienen al menos un comentario, utilizando el método Any() para verificar si la colección de comentarios no está vacía.
                     .ToListAsync();
             }
@@ -82,8 +98,8 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 return await context.Posts.AsNoTracking()
-                    .Include(p => p.Comments)                   // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
-                    .Where(x => x.Likes >= numberOfLikes)
+                    .Include(i => i.Comments).AsNoTracking()                  // Incluimos los comentarios del Post a la hora de devolverlo ya que al usar lazy loading, sin el Include los comentarios se cargarán recién cuando se acceda a ellos y no al traer el Post.
+                    .Where(x => x.Likes >= numberOfLikes)       // Comentarios con al menos numberOfLikes
                     .ToListAsync();
             }
         }
@@ -93,7 +109,7 @@ namespace Post.Query.Infrastructure.Repositories
             using (DatabaseContext context = _contextFactory.CreateDbContext())
             {
                 context.Posts.Update(post);
-                await context.SaveChangesAsync();
+                _ = await context.SaveChangesAsync();
             }
         }
     }

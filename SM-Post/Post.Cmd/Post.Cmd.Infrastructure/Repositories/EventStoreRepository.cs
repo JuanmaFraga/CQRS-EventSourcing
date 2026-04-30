@@ -21,6 +21,11 @@ namespace Post.Cmd.Infrastructure.Repositories
             _eventStoreCollection = mongoDatabase.GetCollection<EventModel>(config.Value.Collection);   // Obtenemos una referencia a la colección de eventos en MongoDB utilizando el nombre de la colección especificado en la configuración. Esta colección se utilizará para guardar y recuperar los eventos relacionados con los Aggregates en el sistema.
         }
 
+        public async Task<List<EventModel>> FindAllAsync()
+        {
+            return await _eventStoreCollection.Find(_ => true).ToListAsync().ConfigureAwait(false);     // _=> true : no hay una cláusula espeficifa, pero Find necesita parámetro
+        }
+
         public async Task<List<EventModel>> FindByAggregateId(Guid aggregateId)
         {
             return await _eventStoreCollection.Find(x => x.AggregateIdentifier == aggregateId).ToListAsync().ConfigureAwait(false);     // ConfigureAwait(false) se usa para evitar forzar que el callback se ejecute en el mismo contexto de sincronización, lo que puede mejorar el rendimiento y evitar deadlocks en aplicaciones ASP.NET Core.

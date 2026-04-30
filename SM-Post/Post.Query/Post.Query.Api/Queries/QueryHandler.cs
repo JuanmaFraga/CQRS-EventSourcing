@@ -24,14 +24,14 @@ namespace Post.Query.Api.Queries
             return new List<PostEntity> { post };
         }
 
-        public async Task<List<PostEntity>> HandleAsync(FindAllPostsWithCommentsQuery query)
-        {
-            return await _postRepository.ListWithCommentsAsync();
-        }
-
         public async Task<List<PostEntity>> HandleAsync(FindPostsByAuthorQuery query)
         {
             return await _postRepository.ListByAuthorAsync(query.Author);
+        }
+
+        public async Task<List<PostEntity>> HandleAsync(FindPostsWithCommentsQuery query)
+        {
+            return await _postRepository.ListWithCommentsAsync();
         }
 
         public async Task<List<PostEntity>> HandleAsync(FindPostsWithLikesQuery query)

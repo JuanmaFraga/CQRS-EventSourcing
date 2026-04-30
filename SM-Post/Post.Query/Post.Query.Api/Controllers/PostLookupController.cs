@@ -44,7 +44,7 @@ namespace Post.Query.Api.Controllers                    // http://localhost:5011
             {
                 var posts = await _queryDispatcher.SendAsync(new FindPostByIdQuery { Id = postId });    // Sin el await devolves una Task<List<PostEntity>>, una Task, una "promesa" de que vas a devolver una List<PostEntity>.
                                                                                                         // await dice que esperes el resultado, y ahí si devolves directamente uan List<PostEntity>
-                if (posts == null || !posts.Any())
+                if (posts == null || !posts.Any(p => p != null)!)                   // !posts.Any() No salta cuando tengo una lista de nulls. Cuando en el handler Post viene null, y hacemos List<PostEntity> { post } nos queda una lista de un null que no salta con el !posts.Any()
                 {
                     return NoContent();     // NoContent devuelve un error 204
                 }
@@ -81,7 +81,7 @@ namespace Post.Query.Api.Controllers                    // http://localhost:5011
         }
 
         [HttpGet("withLikes/{numberOfLikes}")]
-        public async Task<ActionResult> GetWithLikesAsync(int numberOfLikes)
+        public async Task<ActionResult> GetWithLikesAsync(int numberOfLikes)        // En el repositorio usamos x.Likes >= numberOfLikes por lo que es con AL MENOS tantos Likes
         {
             try
             {
@@ -102,7 +102,7 @@ namespace Post.Query.Api.Controllers                    // http://localhost:5011
         {
             try
             {
-                var posts = await _queryDispatcher.SendAsync(new FindAllPostsWithCommentsQuery());
+                var posts = await _queryDispatcher.SendAsync(new FindPostsWithCommentsQuery());
                 return NormalResponse(posts);
             }
             catch (Exception ex)
@@ -116,7 +116,7 @@ namespace Post.Query.Api.Controllers                    // http://localhost:5011
         // Métodos privados
         private ActionResult NormalResponse(List<PostEntity> posts)     // Para no repetir código entre los controller y cumplir con el principio DRY (Don’t Repeat Yourself)
         {                                                               // Puede devolver Ok 200 o NoContent 204
-            if (posts == null || !posts.Any())
+            if (posts == null || !posts.Any(p => p != null)!)                   // !posts.Any() No salta cuando tengo una lista de nulls. Cuando en el handler Post viene null, y hacemos List<PostEntity> { post } nos queda una lista de un null que no salta con el !posts.Any()
             {
                 return NoContent();     // NoContent devuelve un error status 204
             }

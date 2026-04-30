@@ -3,7 +3,7 @@ using Post.Cmd.Domain.Aggregates;
 
 namespace Post.Cmd.Api.Commands
 {
-    public class CommandHandler : ICommandHandler           // Representa el Concrete Colleague en el patrón Mediator, implementando la interfaz ICommandHandler para manejar la lógica de procesamiento de comandos específicos relacionados con las operaciones de publicación, edición, me gusta, comentarios y eliminación de publicaciones. Cada método HandleAsync se encargará de procesar un comando específico, aunque en este ejemplo se lanzan excepciones NotImplementedException para indicar que la lógica aún no ha sido implementada.
+    public class CommandHandler : ICommandHandler           // Representa el Concrete Colleague en el patrón Mediator, implementando la interfaz ICommandHandler para manejar la lógica de procesamiento de comandos específicos relacionados con las operaciones de publicación, edición, me gusta, comentarios y eliminación de publicaciones. Cada método HandleAsync se encargará de procesar un comando específico.
     {
         private readonly IEventSourcingHandler<PostAggregate> _eventSourcingHandler;            // Para manejar los objetos de command
 
@@ -32,7 +32,7 @@ namespace Post.Cmd.Api.Commands
         {
             var aggregate = await _eventSourcingHandler.GetByIdAsync(command.Id);                      // Recupera el estado actual del agregado PostAggregate desde el Event Store utilizando el ID proporcionado en el comando LikePostCommand, lo que permite obtener la información actual del post antes de realizar la acción de "me gusta".
             
-            aggregate.LikedPost();                                                        // Llama al método LikePost del agregado para registrar que un usuario ha dado "me gusta" al post, utilizando el nombre de usuario proporcionado en el comando.
+            aggregate.LikePost();                                                        // Llama al método LikePost del agregado para registrar que un usuario ha dado "me gusta" al post, utilizando el nombre de usuario proporcionado en el comando.
             await _eventSourcingHandler.SaveAsync(aggregate);                                                   // Guarda el estado actualizado del agregado en el Event Store, lo que persiste la acción de "me gusta" realizada por el usuario en el post.
         }
 
@@ -69,6 +69,11 @@ namespace Post.Cmd.Api.Commands
             // No chequeamos si el username del comando es el mismo que el del post porque el método DeletePost lanza una excepción si el username no coincide, lo que indica que el usuario que intenta eliminar el post no es el autor original del post.
             aggregate.DeletePost(command.Username);                                                        // Llama al método DeletePost del agregado para eliminar el post, utilizando el nombre de usuario proporcionado en el comando.
             await _eventSourcingHandler.SaveAsync(aggregate);                                                   // Guarda el estado actualizado del agregado en el Event Store, lo que persiste la eliminación del post.
+        }
+
+        public async Task HandleAsync(RestoreReadDbCommand command)                  // Manejamos el comando para Republicar a KAFKA todos los eventos del EventStore
+        {
+            await _eventSourcingHandler.RepublishEventsAsync();                    // Le pasamos la tarea al Event Sorucing Handler donde se envía a Kafka
         }
     }
 }

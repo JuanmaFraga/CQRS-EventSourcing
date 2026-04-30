@@ -22,6 +22,12 @@ Action<DbContextOptionsBuilder> configureDbContext = o => o.UseLazyLoadingProxie
 builder.Services.AddDbContext<DatabaseContext>(configureDbContext);
 builder.Services.AddSingleton<DatabaseContextFactory>(new DatabaseContextFactory(configureDbContext));     // Agrega el DatabaseContextFactory como un servicio singleton en el contenedor de servicios de la aplicación, lo que permite que una única instancia del factory se comparta a lo largo de toda la aplicación para crear instancias de DatabaseContext según sea necesario, por la utilización de Factory.
 
+///////////////// Create Database tables from Code (SQL) //////////////////////
+var dataContext = builder.Services.BuildServiceProvider().GetRequiredService<DatabaseContext>();     // Construye un proveedor de servicios a partir del contenedor de servicios configurado y luego obtiene una instancia de DatabaseContext utilizando el método GetRequiredService. Esto se hace para asegurarse de que la base de datos esté creada y las tablas estén configuradas correctamente antes de que la aplicación comience a manejar solicitudes.
+dataContext.Database.EnsureCreated();                                                                // El método EnsureCreated() se utiliza para crear la base de datos y las tablas correspondientes si aún no existen.
+
+//////////////////////////////////////////////////////////////////////////
+
 builder.Services.AddScoped<IPostRepository, PostRepository>();     // Agrega el servicio de repositorio de posts al contenedor de servicios con un tiempo de vida scoped, lo que significa que se creará una nueva instancia del repositorio para cada solicitud HTTP, y se compartirá dentro de esa solicitud, lo que es adecuado para manejar operaciones relacionadas con la base de datos en el contexto de una aplicación web.
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();     // Agrega el servicio de repositorio de comentarios al contenedor de servicios con un tiempo de vida scoped
 
@@ -38,25 +44,19 @@ var dispatcher = new QueryDispatcher();
 dispatcher.RegisterHandler<FindAllPostsQuery>(queryHandler.HandleAsync);        // El delegate en este caso es HandleAsync del QueryHandler
 dispatcher.RegisterHandler<FindPostByIdQuery>(queryHandler.HandleAsync);
 dispatcher.RegisterHandler<FindPostsByAuthorQuery>(queryHandler.HandleAsync);
-dispatcher.RegisterHandler<FindAllPostsWithCommentsQuery>(queryHandler.HandleAsync);
+dispatcher.RegisterHandler<FindPostsWithCommentsQuery>(queryHandler.HandleAsync);
 dispatcher.RegisterHandler<FindPostsWithLikesQuery>(queryHandler.HandleAsync);
-builder.Services.AddSingleton<IQueryDispatcher<PostEntity>>(_ => dispatcher);       // Cada vez que alguien pida un IQueryDispatcher<PostEntity>, usá siempre este dispatcher que ya tengo creado. Estamos inyectando la dependencia para la interfaz IQueryDispatcher<PostEntity>
+builder.Services.AddScoped<IQueryDispatcher<PostEntity>>(_ => dispatcher);       // Cada vez que alguien pida un IQueryDispatcher<PostEntity>, usá siempre este dispatcher que ya tengo creado. Estamos inyectando la dependencia para la interfaz IQueryDispatcher<PostEntity>
 
 ///////////////////////////////////////////////////////////////////////////
 
-///////////////// Create Database tables from Code (SQL) //////////////////////
-var dataContext = builder.Services.BuildServiceProvider().GetRequiredService<DatabaseContext>();     // Construye un proveedor de servicios a partir del contenedor de servicios configurado y luego obtiene una instancia de DatabaseContext utilizando el método GetRequiredService. Esto se hace para asegurarse de que la base de datos esté creada y las tablas estén configuradas correctamente antes de que la aplicación comience a manejar solicitudes.
-dataContext.Database.EnsureCreated();                                                                // El método EnsureCreated() se utiliza para crear la base de datos y las tablas correspondientes si aún no existen.
-
-//////////////////////////////////////////////////////////////////////////
+// Inicializamos los Controllers
+builder.Services.AddControllers();
 
 // Agrego la registración del servicio del ConsumerHostedService para que se ejecute en segundo plano y mantenga el consumidor de eventos en ejecución, lo que permite procesar los eventos a medida que llegan y mantener la base de datos de consulta actualizada con los cambios realizados en la base de datos de escritura a través de los eventos consumidos.
 builder.Services.AddHostedService<ConsumerHostedService>();     // Agrega el servicio hospedado de consumo de eventos al contenedor de servicios, lo que permite que el ConsumerHostedService se ejecute en segundo plano para mantener el consumidor de eventos en ejecución y procesar los eventos a medida que llegan, asegurando que el consumidor de eventos esté siempre activo mientras la aplicación esté en ejecución.
 
 builder.Services.AddOpenApi();
-
-// Inicializamos los Controllers
-builder.Services.AddControllers();
 
 var app = builder.Build();
 

@@ -46,7 +46,6 @@ namespace Post.Query.Infrastructure.Repositories
 
                 context.Comments.Remove(comment);
                 _ = await context.SaveChangesAsync();
-
             }
         }
 

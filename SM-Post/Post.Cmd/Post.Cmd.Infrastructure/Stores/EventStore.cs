@@ -7,6 +7,7 @@ using Post.Cmd.Domain.Aggregates;
 using Post.Cmd.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Text;
 
 namespace Post.Cmd.Infrastructure.Stores
@@ -21,6 +22,18 @@ namespace Post.Cmd.Infrastructure.Stores
         {
             _eventStoreRepository = eventStoreRepository;
             _eventProducer = eventProducer;
+        }
+
+        public async Task<List<Guid>> GetAggregateIdsAsync()            // Devolvemos todos los Ids de todos los Aggregate del EventStore
+        {
+            var eventStream = await _eventStoreRepository.FindAllAsync();
+
+            if (eventStream == null || !eventStream.Any())
+            {
+                throw new ArgumentNullException(nameof(eventStream),"Could not retrieve event stream from the event store!");
+            }
+
+            return eventStream.Select(x =>x.AggregateIdentifier).Distinct().ToList();       // Devolvemos todos los Ids una sola vez cada uno
         }
 
         public async Task<List<BaseEvent>> GetEventsAsync(Guid aggregateId)

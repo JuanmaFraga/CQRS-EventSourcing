@@ -9,5 +9,6 @@ namespace CQRS.Core.Domain                              // Se define en Domain y
     {                                                   // Sólo deberíamos poder crear y leer data porque los eventos son inmutables, o sea que no se pueden cambiar
         Task SaveAsync(EventModel @event);                              // Método para guardar un evento en la base de datos. Este método se utiliza para persistir los eventos generados por los Aggregates.
         Task<List<EventModel>> FindByAggregateId(Guid aggregateId);     // Método para obtener la lista de eventos asociados a un Aggregate específico, identificado por su Id. Este método se utiliza para reconstruir el estado del Aggregate a partir de su historial de eventos.
+        Task<List<EventModel>> FindAllAsync();          // Devuelve todos los eventos de todos los Aggregates
     }
 }

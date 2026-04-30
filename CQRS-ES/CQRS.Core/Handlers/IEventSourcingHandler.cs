@@ -10,5 +10,7 @@ namespace CQRS.Core.Handlers
         Task SaveAsync(AggregateRoot aggregate);     // Método para guardar un agregado, que se encargará de persistir los eventos asociados al agregado en el Event Store. Este método es asíncrono, lo que permite una mejor escalabilidad y rendimiento en la aplicación.
     
         Task<T> GetByIdAsync(Guid aggregateId);              // T va a ser la implementación concreta del Aggregate (PostAggregate)
+
+        Task RepublishEventsAsync();                // No toma parámetros porque leemos TODOS los eventos de la base de eventos
     }
 }
